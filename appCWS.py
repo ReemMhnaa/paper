@@ -16,6 +16,7 @@ app = FastAPI()
 UPLOAD_DIR = "uploaded_files"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+
 def read_file_content(file_path: str) -> str:
     ext = file_path.split(".")[-1].lower()
     text = ""
