@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 import os
+
 import shutil
 import pandas as pd
 from PyPDF2 import PdfReader
@@ -11,6 +12,7 @@ from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTex
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import TextLoader
 from sentence_transformers import SentenceTransformer
+from chromadb import ChromaDB  # Assuming ChromaDB is the library you're using for the database
 
 app = FastAPI()
 UPLOAD_DIR = "uploaded_files"
@@ -122,6 +124,34 @@ async def split_file(
     pd.DataFrame({"Chunk": chunks}).to_excel(output_file, index=False)
     
     return {"message": "تمت معالجة الملف بنجاح", "output_file": output_file}
+
+@app.post("/embed_chunks/")
+async def embed_chunks(file_path: str = "reem1_space_chunks.xlsx"):
+    """Embed chunks from an Excel file and save them in Chroma DB"""
+    # Load the Excel file
+    df = pd.read_excel(file_path)
+    
+    # Check if 'Chunk' column exists
+    if 'Chunk' not in df.columns:
+        raise HTTPException(status_code=400, detail="Column 'Chunk' not found in the Excel file.")
+    
+    # Extract chunks
+    chunks = df['Chunk'].tolist()
+    
+    # Load the sentence transformer model
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    
+    # Embed the chunks
+    embeddings = model.encode(chunks, convert_to_numpy=True)
+    
+    # Initialize Chroma DB
+    chroma_db = ChromaDB()  # Initialize your Chroma DB instance here
+    
+    # Save embeddings to Chroma DB
+    for chunk, embedding in zip(chunks, embeddings):
+        chroma_db.save_embedding(chunk, embedding)  # Assuming save_embedding is the method to save in Chroma DB
+    
+    return {"message": "Chunks embedded and saved successfully in Chroma DB"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
