@@ -17,7 +17,7 @@ rag-sys is a FastAPI application designed to process various document formats (T
 - python-docx
 - pandas
 
-## Installation
+## Installation langchain... pip install -U langchain-community
 ```bash
 python -m venv venv
 source venv/bin/activate #.\venv\scripts\activate
