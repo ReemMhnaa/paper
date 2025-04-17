@@ -17,7 +17,7 @@ rag-sys is a FastAPI application designed to process various document formats (T
 - python-docx
 - pandas
 
-## Installation langchain... pip install -U langchain-community
+## Installation langchain... pip install -U langchain-community....openpyxl
 ```bash
 python -m venv venv
 source venv/bin/activate #.\venv\scripts\activate
@@ -74,6 +74,8 @@ curl -X POST http://localhost:8000/split/ \
      -F "overlap=200" \
      -F "split_type=character or space"
 
+curl -X POST http://localhost:8000/embed_chunks/ 
+     -F "file_path=uploaded_files/document_space_chunks.xlsx"
 
 ```
 
