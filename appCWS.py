@@ -132,5 +132,45 @@ async def embed_chunks(file_path: str = Form(...)):
 
     return {"message": "تم حفظ التضمينات في ChromaDB بنجاح"}
 
+# Add this new endpoint after your existing endpoints
+
+@app.post("/search/")
+async def search_documents(query: str = Form(...), top_k: int = Form(5)):
+    """البحث في قاعدة البيانات ChromaDB وإرجاع أفضل النتائج"""
+    if not query:
+        raise HTTPException(status_code=400, detail="يرجى تقديم استعلام للبحث")
+    
+    # تحميل نموذج التضمين
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    
+    # تحويل الاستعلام إلى متجه
+    query_embedding = model.encode(query, convert_to_numpy=True).tolist()
+    
+    # البحث في ChromaDB
+    try:
+        results = collection.query(
+            query_embeddings=[query_embedding],
+            n_results=min(top_k, 20)  # تحديد عدد النتائج المطلوبة (بحد أقصى 20)
+        )
+        
+        # تنسيق النتائج
+        documents = results.get('documents', [[]])[0]
+        distances = results.get('distances', [[]])[0] if 'distances' in results else []
+        
+        formatted_results = []
+        for i, (doc, distance) in enumerate(zip(documents, distances)):
+            formatted_results.append({
+                "rank": i + 1,
+                "text": doc,
+                "similarity_score": 1 - distance if distance <= 1 else 0  # تحويل المسافة إلى درجة تشابه
+            })
+        
+        return {
+            "query": query,
+            "results": formatted_results
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء البحث: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

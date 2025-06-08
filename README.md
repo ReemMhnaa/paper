@@ -77,6 +77,10 @@ curl -X POST http://localhost:8000/split/ \
 curl -X POST http://localhost:8000/embed_chunks/ 
      -F "file_path=uploaded_files/document_space_chunks.xlsx"
 
+curl -X POST http://localhost:8000/search/ \
+     -F "query=your search query" \
+     -F "top_k=5"
+
 ```
 
 ## Development Server
